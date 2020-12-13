@@ -4,6 +4,27 @@
 
 Также в репозитории имеется моя тестовая реализация модифицированного алгоритма `POISK`.
 
+## Installation
+
+```bash
+pip install .
+```
+
+## CLI Usage
+```bash
+$define -h
+usage: define [-h] train test
+
+Classify element using DEFINE system
+
+positional arguments:
+  train       Path to train CSV file
+  test        Path to test CSV file
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
 ## Contributors
 
  * [Vladimir Parkhomenko](https://github.com/ParkhomenkoV)
