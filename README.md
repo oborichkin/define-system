@@ -27,5 +27,6 @@ optional arguments:
 
 ## Contributors
 
- * [Vladimir Parkhomenko](https://github.com/ParkhomenkoV)
+ * [Pavel Oborin](http://github.com/Oborichkin)
  * Xenia Naidenova
+ * [Vladimir Parkhomenko](https://github.com/ParkhomenkoV)

@@ -17,24 +17,27 @@ def poisk(d_plus: tuple, Q_j_orig: List[tuple], iter_method=list) -> set:
     Returns:
         set: Минимальный набор тестов для d_plus и Q_j
     """
-    t = set()
-    Q_j = copy.deepcopy(Q_j_orig)
-    if d_plus in Q_j:
+    t = set()                      # Инициализируем искомое множество пустым множеством
+    Q_j = copy.deepcopy(Q_j_orig)  # Копируем Qj чтобы не изменить исходное, в ходе работы
+    if d_plus in Q_j:              # Удаляем из рассмотрения d_plus, если он есть в Qj
         Q_j.remove(d_plus)
-    _kw = {d_minus: kw(d_plus, d_minus) for d_minus in Q_j}
-    _mw = {i: mw(i, d_plus, Q_j) for i in range(len(d_plus))}
+    _kw = {d_minus: kw(d_plus, d_minus) for d_minus in Q_j}     # Расчет kw
+    _mw = {i: mw(i, d_plus, Q_j) for i in range(len(d_plus))}   # Расчет mw
 
     while Q_j:
+        # Выбираем d_minus и attr по условиям алгоритма
         d_minus_selected = find_min(_kw, iter_method, _kw.get)
         diff_attr = {k: v for k, v in _mw.items() if k in distinguishing(d_plus, d_minus_selected)}
         attr_selected = find_max(diff_attr, iter_method, diff_attr.get)
         t.add(attr_selected)
         for_deletion = []
+        # Корректируем значения mw
         for d_minus in Q_j:
             if attr_selected in distinguishing(d_plus, d_minus):
                 for attr in distinguishing(d_plus, d_minus):
                     _mw[attr] -= 1
                 for_deletion.append(d_minus)
+        # Из Q_j удаляем аттрибуты, отличающиеся от d_plus на attr
         for d in for_deletion:
             Q_j.remove(d)
             _kw.pop(d)
