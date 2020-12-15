@@ -10,6 +10,14 @@
 pip install .
 ```
 
+## Project description
+
+- `define/` - модуль с основным кодом
+- `define/main.py` - основные методы системы DEFINE
+- `define/utils.py` - вспомогательные методы
+- `define/cli.py` - утилита для коммандной строки
+- `tests/` - юнит-тесты некоторых методов
+
 ## CLI Usage
 ```bash
 $define -h
