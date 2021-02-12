@@ -13,4 +13,4 @@ def main():
     train = dict_from_csv(args.train)
     test = list_from_csv(args.test)
 
-    print(classify(train, test))
+    print(classify(train, test, make_page=True))

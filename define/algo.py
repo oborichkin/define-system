@@ -14,6 +14,11 @@ class Step:
             html += f"<ol>{''.join([step.__html__() for step in self.substeps])}</ol>"
         return html
 
+    def append(self, item):
+        if isinstance(item, str):
+            item = Step(item)
+        self.substeps.append(item)
+
     @property
     def html(self):
         return self.__html__()

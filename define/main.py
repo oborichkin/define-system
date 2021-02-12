@@ -3,10 +3,11 @@ import copy
 from collections import defaultdict
 from typing import List, Generator
 
+from .algo import Step
 from .utils import kw, mw, distinguishing, find_max, find_min, randomly, mw_advanced
 
 
-def poisk(d_plus: tuple, Q_j_orig: List[tuple], iter_method=list) -> set:
+def poisk(d_plus: tuple, Q_j_orig: List[tuple], iter_method=list, algo_steps=Step()) -> set:
     """Реазлизация алгоритма POISK
 
     Args:
@@ -27,8 +28,10 @@ def poisk(d_plus: tuple, Q_j_orig: List[tuple], iter_method=list) -> set:
     while Q_j:
         # Выбираем d_minus и attr по условиям алгоритма
         d_minus_selected = find_min(_kw, iter_method, _kw.get)
+        algo_steps.append(f"Выбранное значение d_minus: {d_minus_selected}")
         diff_attr = {k: v for k, v in _mw.items() if k in distinguishing(d_plus, d_minus_selected)}
         attr_selected = find_max(diff_attr, iter_method, diff_attr.get)
+        algo_steps.append(f"Выбраны атрибуты {attr_selected}")
         t.add(attr_selected)
         for_deletion = []
         # Корректируем значения mw
@@ -86,7 +89,7 @@ def my_poisk(d_plus: tuple, Q_j_orig: List[tuple], mw_method=mw, mw_recalculate=
     return t
 
 
-def upravl(Q_i, Q_j, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False):
+def upravl(Q_i, Q_j, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False, algo_steps=Step()):
     """Реализация алгоритма upravl
 
     Args:
@@ -102,15 +105,17 @@ def upravl(Q_i, Q_j, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalcu
     """
     T = set()
     for d_plus in Q_i:
+        algo_steps.append(f"Алгоритм POISK для элемента {d_plus} против класса {Q_i}")
         if poisk_alg == poisk:
-            mt = poisk(d_plus, Q_j, iter_method=iter_method)
+            mt = poisk(d_plus, Q_j, iter_method=iter_method, algo_steps=algo_steps.substeps[-1])
         else:
             mt = my_poisk(d_plus, Q_j, mw_method=mw_method, iter_method=iter_method, mw_recalculate=mw_recalculate)
+        algo_steps.append(f"POISK нашел минимальный тест для {d_plus}: {mt}")
         T = T.union(mt)
     return T
 
 
-def make_qmt(data, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False):
+def make_qmt(data, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False, algo_steps=Step()):
     """Создает матрицу квази-минимальных тестов
 
     Args:
@@ -125,14 +130,20 @@ def make_qmt(data, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalcula
     """
     qmt = defaultdict(dict)
     for i, i_elems in data.items():
+        algo_steps.append(f"Ищем квазиминимальные тесты для класса <strong>{i}</strong>")
+        algo_steps_deeper = algo_steps.substeps[-1]
         for j, j_elems in data.items():
+            algo_steps_deeper.append(f"Ищем квазиминимальные тесты между классами <strong>{i}</strong> и <strong>{j}</strong>")
             if j in qmt[i]:
                 continue
-            qmt[i][j] = upravl(i_elems, j_elems, poisk_alg=poisk_alg, mw_method=mw_method, iter_method=iter_method, mw_recalculate=mw_recalculate)
+            item = upravl(i_elems, j_elems, poisk_alg=poisk_alg, mw_method=mw_method, iter_method=iter_method, mw_recalculate=mw_recalculate, algo_steps=algo_steps_deeper.substeps[-1])
+            algo_steps_deeper.substeps[-1].append(f"Результат алгоритма UPRAVL: {item}")
+            qmt[i][j] = item
+            algo_steps_deeper.substeps[-1].append(f"Текущие квазиминимальные тесты для класса <strong>{i}</strong>: {qmt[i]}")
     return qmt
 
 
-def classify(train, test, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False):
+def classify(train, test, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_recalculate=False, make_page=False):
     """Классификация класса при помощи DEFINE системы
 
     Args:
@@ -146,7 +157,8 @@ def classify(train, test, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_re
     Returns:
         str: Класс принадлежности элементов test
     """
-    qmt = make_qmt(train, poisk_alg=poisk_alg, mw_method=mw_method, iter_method=iter_method, mw_recalculate=mw_recalculate)
+    steps = Step()
+    qmt = make_qmt(train, poisk_alg=poisk_alg, mw_method=mw_method, iter_method=iter_method, mw_recalculate=mw_recalculate, algo_steps=steps)
     tests = dict()
     tests_count = defaultdict(int)
     for _cls, items in train.items():
@@ -154,4 +166,7 @@ def classify(train, test, poisk_alg=poisk, mw_method=mw, iter_method=list, mw_re
     for _cls, class_tests in qmt.items():
         for _cls2, test_tests in tests.items():
             tests_count[_cls] += len(class_tests[_cls2].intersection(test_tests))
+    if make_page:
+        with open("index.html", "w") as f:
+            f.write(steps.html)
     return max(tests_count, key=tests_count.get)
